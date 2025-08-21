@@ -82,12 +82,6 @@
       transition: transform 0.3s ease;
     }
     button:hover { transform: scale(1.05); }
-    #muteBtn {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      z-index: 10;
-    }
 
     /* Wheel styles */
     .wheel-area {
@@ -189,15 +183,10 @@
       opacity: 0.35;
       pointer-events: none;
     }
-    @keyframes scan {
-      0% { transform: translateY(-10%); }
-      100% { transform: translateY(110%); }
-    }
   </style>
 </head>
 <body>
   <div id="overlay"></div>
-  <button id="muteBtn">🔈 Mute</button>
 
   <!-- Intro Page -->
   <div id="introPage">
@@ -251,22 +240,18 @@
     });
     try { staticSfx.play(); } catch(e) {}
 
-    // Background music
+    // Background music (always on)
     const sound = new Howl({
       src: ['audio/kiss-the-rain-274811.mp3'],
       autoplay: true,
       loop: true,
       volume: 0.5
     });
-    document.getElementById('muteBtn').onclick = () => {
-      sound.mute(!sound._muted);
-      document.getElementById('muteBtn').textContent = sound._muted ? '🔈 Mute' : '🔇 Unmute';
-    };
 
-    // Unlock audio on first tap/click (mobile)
+    // Unlock audio on first tap/click (iPhone/Android policy)
     function unlockAudioOnce() {
-      try { if (staticSfx && !staticSfx.playing()) staticSfx.play(); } catch(e){}
-      try { if (sound && !sound.playing()) sound.play(); } catch(e){}
+      try { if (!staticSfx.playing()) staticSfx.play(); } catch(e){}
+      try { if (!sound.playing()) sound.play(); } catch(e){}
       window.removeEventListener('touchstart', unlockAudioOnce);
       window.removeEventListener('click', unlockAudioOnce);
     }
@@ -295,7 +280,7 @@
       if (e.key === 'Enter') {
         let val = e.target.value.trim().toLowerCase();
         if (val === 'babe' || val === 'muffin') {
-          launchConfetti();
+          launchConfetti(); // now carrots
           setTimeout(() => showPage('page2'), 1000);
         } else {
           alert('Hehe nope, try again 😜');
@@ -303,24 +288,51 @@
       }
     });
 
-    // Confetti
+    // === Carrot particles ===
+    function spawnCarrot() {
+      const carrot = document.createElement('div');
+      carrot.textContent = '🥕';
+      carrot.style.position = 'fixed';
+      carrot.style.left = Math.random() * 100 + '%';
+      carrot.style.top = (100 + Math.random() * 10) + '%'; // start slightly below
+      carrot.style.fontSize = (Math.random() * 20 + 14) + 'px';
+      carrot.style.pointerEvents = 'none';
+      document.body.appendChild(carrot);
+
+      anime({
+        targets: carrot,
+        translateY: ['0vh', '-110vh'],
+        translateX: anime.random(-20, 20),
+        rotate: () => anime.random(-45, 45),
+        opacity: [{ value: 1, duration: 100 }, { value: 0, duration: 800, delay: 1200 }],
+        duration: anime.random(1500, 2600),
+        easing: 'easeOutCubic',
+        complete: () => carrot.remove()
+      });
+    }
+
+    // Continuous carrots "all the time"
+    let carrotInterval = setInterval(spawnCarrot, 400);
+
+    // Confetti -> now carrots burst (kept same function name to avoid changing other calls)
     function launchConfetti() {
       for (let i = 0; i < 50; i++) {
-        const heart = document.createElement('div');
-        heart.textContent = '❤️';
-        heart.style.position = 'fixed';
-        heart.style.left = Math.random() * 100 + '%';
-        heart.style.top = Math.random() * 100 + '%';
-        heart.style.fontSize = (Math.random() * 20 + 10) + 'px';
-        document.body.appendChild(heart);
+        const carrot = document.createElement('div');
+        carrot.textContent = '🥕';
+        carrot.style.position = 'fixed';
+        carrot.style.left = Math.random() * 100 + '%';
+        carrot.style.top = Math.random() * 100 + '%';
+        carrot.style.fontSize = (Math.random() * 20 + 10) + 'px';
+        carrot.style.pointerEvents = 'none';
+        document.body.appendChild(carrot);
         anime({
-          targets: heart,
+          targets: carrot,
           translateY: '-100vh',
           rotate: () => anime.random(-360, 360),
           opacity: 0,
           duration: anime.random(1200, 2000),
           easing: 'easeOutExpo',
-          complete: () => heart.remove()
+          complete: () => carrot.remove()
         });
       }
     }
@@ -356,7 +368,7 @@
 
     // Page 3
     document.getElementById('yesBtn').onclick = () => {
-      launchConfetti();
+      launchConfetti(); // carrots burst
       document.getElementById('yesBtn').disabled = true;
       const msg = document.createElement('p');
       msg.textContent = "Yay! I can’t wait 🥰";
