@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Love Game</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      font-family: 'Poppins', sans-serif;
+      overflow: hidden;
+    }
+
+    /* Animated background */
+    body {
+      background: url("https://wallpaperaccess.com/full/8278296.gif") no-repeat center center fixed;
+      background-size: cover;
+    }
+
+    /* Overlay tint with your fav colors */
+    #overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: linear-gradient(
+        135deg,
+        rgba(255,192,203,0.4),
+        rgba(255,255,224,0.2),
+        rgba(178,34,34,0.3)
+      );
+      z-index: -1;
+    }
+
+    .page {
+      position: absolute;
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.8s ease;
+      padding: 1em;
+      text-align: center;
+    }
+    .active {
+      opacity: 1; pointer-events: all;
+    }
+    h1 {
+      font-family: 'Pacifico', cursive;
+      font-size: 2.2em;
+      margin-bottom: 0.5em;
+      color: #ad3e5b;
+      text-shadow: 1px 1px 3px rgba(255,255,255,0.6);
+    }
+    p {
+      font-size: 1.2em;
+      margin-bottom: 1em;
+      color: #333;
+      text-shadow: 1px 1px 2px rgba(255,255,255,0.6);
+    }
+    input {
+      padding: 0.6em 1em;
+      font-size: 1em;
+      border-radius: 20px;
+      border: none;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    button {
+      padding: 0.6em 1.4em;
+      font-size: 1em;
+      border-radius: 24px;
+      border: none;
+      margin: 0.5em;
+      background: #ffe4e1;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+    }
+    button:hover { transform: scale(1.05); }
+    #muteBtn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 10;
+    }
+
+    /* Wheel styles */
+    .wheel-area {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      border: 8px solid #fff;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      background: conic-gradient(
+        #ffb6c1 0deg 120deg,
+        #ffe4e1 120deg 240deg,
+        #f8c8dc 240deg 360deg
+      );
+      transition: transform 4s cubic-bezier(0.33, 1, 0.68, 1);
+      margin: 1em auto;
+    }
+    .pointer {
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 2em;
+      z-index: 2;
+    }
+    .messages {
+      font-weight: bold;
+      color: #8b1e3f;
+      margin-bottom: 1em;
+    }
+    .result {
+      margin-top: 1em;
+      font-size: 1.1em;
+      color: #8b1e3f;
+      display: none;
+    }
+    footer {
+      position: absolute;
+      bottom: 10px;
+      font-size: 0.9em;
+      color: #333;
+    }
+
+    /* ===== Page 0: TV Intro (added) ===== */
+    #introPage {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      color: #fff;
+      z-index: 9999;            /* above everything */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+      font-family: 'Pacifico', cursive;
+      text-align: center;
+      overflow: hidden;
+      animation: powerOn 2200ms ease-out forwards;
+    }
+    #introLogo {
+      font-size: 2rem;
+      opacity: 0.9;
+      letter-spacing: 1px;
+    }
+    /* quick white flash + scanline pinch like a CRT turning on */
+    @keyframes powerOn {
+      0%   { background:#000; filter: brightness(1); }
+      10%  { background:#111; }
+      20%  { background:#fff; }
+      22%  { background:#000; }
+      30%  { background:#111; }
+      45%  { background:#222; }
+      60%  { background:#000; }
+      80%  { background:#000; }
+      100% { background:#000; }
+    }
+    /* subtle static overlay */
+    #introStatic {
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(#fff 1px, transparent 1px),
+        radial-gradient(#fff 1px, transparent 1px);
+      background-position: 0 0, 8px 8px;
+      background-size: 16px 16px;
+      opacity: 0.06;
+      animation: noiseShift 300ms steps(2) infinite;
+      pointer-events: none;
+    }
+    @keyframes noiseShift {
+      0% { transform: translate(0,0); }
+      100% { transform: translate(2px,-2px); }
+    }
+    /* thin scanline flicker bar */
+    #scanline {
+      position: absolute;
+      left: 0; right: 0;
+      height: 6px;
+      background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.7), transparent);
+      animation: scan 800ms linear infinite;
+      opacity: 0.35;
+      pointer-events: none;
+    }
+    @keyframes scan {
+      0% { transform: translateY(-10%); }
+      100% { transform: translateY(110%); }
+    }
+  </style>
+</head>
+<body>
+  <!-- overlay tint -->
+  <div id="overlay"></div>
+
+  <button id="muteBtn">🔈 Mute</button>
+
+  <!-- ===== Page 0: TV Intro (added) ===== -->
+  <div id="introPage">
+    <div id="introStatic"></div>
+    <div id="scanline"></div>
+    <div id="introLogo">📺 Love Game Studios</div>
+    <div style="font-size:0.9rem; opacity:0.8;">zzzz... tuning signal ...</div>
+  </div>
+
+  <!-- Page 1 -->
+  <div id="page1" class="page active">
+    <h1>One very important question 😏</h1>
+    <p>What do I call you the most?</p>
+    <input id="nameInput" placeholder="Type here..." />
+  </div>
+
+  <!-- Page 2 -->
+  <div id="page2" class="page">
+    <h1>Pleaseeeee spin this wheel</h1>
+    <div class="messages">
+      💌 Possible fortunes:
+      <ul style="list-style: none; padding-left: 0;">
+        <li>💖 You are prettier than the moon (not in a fat way)</li>
+        <li>🍿 I miss you more than popcorn misses butter</li>
+        <li>🫶 You should never leave me (just saying)</li>
+      </ul>
+    </div>
+    <div class="pointer">🔽</div>
+    <div class="wheel-area" id="wheel"></div>
+    <button id="spinBtn">Spin 🎡</button>
+    <div class="result" id="wheelResult"></div>
+    <button id="nextBtn" style="display:none;">Next 💫</button>
+  </div>
+
+  <!-- Page 3 -->
+  <div id="page3" class="page">
+    <h1>Sooo…</h1>
+    <p>Would you do me the honor of watching a movie with me this weekend? 🎬🍫</p>
+    <div>
+      <button id="yesBtn">Yes 💕</button>
+      <button id="noBtn">No 😢</button>
+    </div>
+    <footer>P.S. Ik it’s late but happy belated birthday cause I missed it :(</footer>
+  </div>
+
+  <script>
+    // ===== Static SFX for TV Intro (added) =====
+    // Replace with your actual static/TV-on sound file
+    const staticSfx = new Howl({
+      src: ['YOUR_STATIC_SOUND.mp3'],
+      volume: 0.6
+    });
+    // Try to play immediately; if autoplay is blocked by the browser, it will simply fail silently.
+    try { staticSfx.play(); } catch (e) {}
+
+    // ===== Existing Music setup (unchanged) =====
+    const sound = new Howl({
+      src: ['YOUR_MUSIC_URL.mp3'], // Replace with your MP3 URL
+      autoplay: true,
+      loop: true,
+      volume: 0.5
+    });
+    document.getElementById('muteBtn').onclick = () => {
+      sound.mute(!sound._muted);
+      document.getElementById('muteBtn').textContent = sound._muted ? '🔈 Mute' : '🔇 Unmute';
+    };
+
+    function showPage(id) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    // ===== Intro page fade out to Page 1 (added) =====
+    setTimeout(() => {
+      const intro = document.getElementById('introPage');
+      intro.style.transition = 'opacity 500ms ease';
+      intro.style.opacity = '0';
+      setTimeout(() => {
+        intro.style.display = 'none';
+        showPage('page1'); // go to first real page
+      }, 520);
+    }, 2400); // ~2.4s intro duration
+
+    // Page 1 behavior (unchanged)
+    document.getElementById('nameInput').addEventListener('keypress', e => {
+      if (e.key === 'Enter') {
+        let val = e.target.value.trim().toLowerCase();
+        if (val === 'babe' || val === 'muffin') {
+          launchConfetti();
+          setTimeout(() => showPage('page2'), 1000);
+        } else {
+          alert('Hehe nope, try again 😜');
+        }
+      }
+    });
+
+    // Confetti (unchanged)
+    function launchConfetti() {
+      for (let i = 0; i < 50; i++) {
+        const heart = document.createElement('div');
+        heart.textContent = '❤️';
+        heart.style.position = 'fixed';
+        heart.style.left = Math.random() * 100 + '%';
+        heart.style.top = Math.random() * 100 + '%';
+        heart.style.fontSize = (Math.random() * 20 + 10) + 'px';
+        document.body.appendChild(heart);
+        anime({
+          targets: heart,
+          translateY: '-100vh',
+          rotate: () => anime.random(-360, 360),
+          opacity: 0,
+          duration: anime.random(1200, 2000),
+          easing: 'easeOutExpo',
+          complete: () => heart.remove()
+        });
+      }
+    }
+
+    // Spin logic (unchanged)
+    const spinBtn = document.getElementById('spinBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const wheel = document.getElementById('wheel');
+    const resultBox = document.getElementById('wheelResult');
+
+    const messages = [
+      "💖 You are prettier than the moon (not in a fat way)",
+      "🍿 I miss you more than popcorn misses butter",
+      "🫶 You should never leave me (just saying)"
+    ];
+
+    spinBtn.onclick = () => {
+      const rotations = 5;
+      const degree = Math.floor(Math.random() * 360);
+      const total = 360 * rotations + degree;
+      wheel.style.transform = `rotate(${total}deg)`;
+
+      setTimeout(() => {
+        const index = Math.floor((degree % 360) / 120);
+        const message = messages[index];
+        resultBox.textContent = message;
+        resultBox.style.display = 'block';
+        nextBtn.style.display = 'inline-block';
+      }, 4000);
+    };
+
+    nextBtn.onclick = () => showPage('page3');
+
+    // Page 3 (unchanged)
+    document.getElementById('yesBtn').onclick = () => {
+      launchConfetti();
+      document.getElementById('yesBtn').disabled = true;
+      const msg = document.createElement('p');
+      msg.textContent = "Yay! I can’t wait 🥰";
+      msg.style.marginTop = '1em';
+      document.getElementById('page3').appendChild(msg);
+    };
+
+    const noBtn = document.getElementById('noBtn');
+    noBtn.addEventListener('mouseenter', () => {
+      noBtn.style.transform = `translate(${Math.random()*200-100}px, ${Math.random()*100-50}px)`;
+    });
+  </script>
+</body>
+</html>
