@@ -2,25 +2,36 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover"
+  />
   <title>Love Game</title>
   <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
   <style>
     * { box-sizing: border-box; }
+    html, body { height: 100%; }
     html, body {
       margin: 0; padding: 0;
-      width: 100%; height: 100%;
+      width: 100%;
       font-family: 'Poppins', sans-serif;
       overflow: hidden;
-      -webkit-tap-highlight-color: transparent; /* nicer on iPhone */
+      -webkit-tap-highlight-color: transparent;
     }
 
-    /* Animated background */
+    /* iPhone full-height + safe area */
     body {
-      background: url("https://wallpaperaccess.com/full/8278296.gif") no-repeat center center fixed;
+      min-height: 100svh;
+      height: 100svh;
+      padding-top: env(safe-area-inset-top, 0);
+      padding-bottom: env(safe-area-inset-bottom, 0);
+      padding-left: env(safe-area-inset-left, 0);
+      padding-right: env(safe-area-inset-right, 0);
+      background: url("https://wallpaperaccess.com/full/8278296.gif") no-repeat center center;
       background-size: cover;
+      background-attachment: scroll; /* iOS fix */
     }
 
     /* Overlay tint */
@@ -39,7 +50,8 @@
 
     .page {
       position: absolute;
-      width: 100%; height: 100%;
+      inset: 0;
+      min-height: 100svh;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
       opacity: 0; pointer-events: none;
@@ -55,12 +67,14 @@
       margin-bottom: 0.5em;
       color: #ad3e5b;
       text-shadow: 1px 1px 3px rgba(255,255,255,0.6);
+      padding: 0 12px;
     }
     p {
       font-size: 1.2em;
       margin-bottom: 1em;
       color: #333;
       text-shadow: 1px 1px 2px rgba(255,255,255,0.6);
+      padding: 0 12px;
     }
     input {
       padding: 0.6em 1em;
@@ -69,7 +83,7 @@
       border: none;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
       text-align: center;
-      width: min(420px, 80vw); /* comfy on iPhone */
+      width: min(420px, 80vw);
     }
     button {
       padding: 0.6em 1.4em;
@@ -80,8 +94,8 @@
       background: #ffe4e1;
       cursor: pointer;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-      transition: transform 0.3s ease;
-      touch-action: manipulation; /* snappier on iPhone */
+      transition: transform 0.2s ease;
+      touch-action: manipulation;
     }
     button:hover { transform: scale(1.05); }
 
@@ -100,6 +114,7 @@
       );
       transition: transform 4s cubic-bezier(0.33, 1, 0.68, 1);
       margin: 1em auto;
+      will-change: transform;
     }
     .pointer {
       position: absolute;
@@ -113,12 +128,14 @@
       font-weight: bold;
       color: #8b1e3f;
       margin-bottom: 1em;
+      padding: 0 12px;
     }
     .result {
       margin-top: 1em;
       font-size: 1.1em;
       color: #8b1e3f;
       display: none;
+      padding: 0 12px;
     }
     footer {
       position: absolute;
@@ -146,6 +163,7 @@
       text-align: center;
       overflow: hidden;
       animation: powerOn 2200ms ease-out forwards;
+      will-change: opacity, transform;
     }
     #introLogo { font-size: 2rem; opacity: 0.9; letter-spacing: 1px; }
     @keyframes powerOn {
@@ -187,34 +205,27 @@
   <div id="introPage">
     <div id="introStatic"></div>
     <div id="scanline"></div>
-    <div id="introLogo">📺 Love Game Studios</div>
-    <div style="font-size:0.9rem; opacity:0.8;">zzzz... tuning signal ...</div>
+    <div id="introLogo">📺 Its working trust</div>
+    <div style="font-size:0.9rem; opacity:0.8;">wait its fucking working</div>
   </div>
 
   <!-- Page 1 -->
   <div id="page1" class="page active">
-    <h1>One very important question 😏</h1>
+    <h1>Okay wokred..One very important question </h1>
     <p>What do I call you the most?</p>
     <input id="nameInput" placeholder="Type here..." />
   </div>
 
-  <!-- Page 2 -->
-  <div id="page2" class="page">
+<!-- Page 2 -->
+<div id="page2" class="page">
     <h1>Pleaseeeee spin this wheel</h1>
-    <div class="messages">
-      💌 Possible fortunes:
-      <ul style="list-style: none; padding-left: 0;">
-        <li>💖 You are prettier than the moon (not in a fat way)</li>
-        <li>🍿 I miss you more than popcorn misses butter</li>
-        <li>🫶 You should never leave me (just saying)</li>
-      </ul>
-    </div>
     <div class="pointer">🔽</div>
     <div class="wheel-area" id="wheel"></div>
     <button id="spinBtn">Spin 🎡</button>
     <div class="result" id="wheelResult"></div>
     <button id="nextBtn" style="display:none;">Next 💫</button>
   </div>
+  
 
   <!-- Page 3 -->
   <div id="page3" class="page">
@@ -240,9 +251,8 @@
       volume: 0.5
     });
 
-    // Attempt to start; iOS may block until first gesture:
+    // Try to start; iOS may block until first gesture
     try { staticSfx.play(); } catch(e) {}
-    // Safari/iOS unlock on first interaction:
     function unlockAudioOnce() {
       try { if (!staticSfx.playing()) staticSfx.play(); } catch(e){}
       try { if (!sound.playing()) sound.play(); } catch(e){}
@@ -276,7 +286,7 @@
       if (e.key === 'Enter') {
         let val = e.target.value.trim().toLowerCase();
         if (val === 'babe' || val === 'muffin') {
-          launchCarrots(40); // still celebrate, but carrots now
+          launchCarrots(40);
           setTimeout(() => showPage('page2'), 1000);
         } else {
           alert('Hehe nope, try again 😜');
@@ -284,7 +294,7 @@
       }
     });
 
-    /* ===== CARROT POPS (replaces hearts; runs continuously) ===== */
+    /* ===== CARROT POPS (continuous) ===== */
     function launchCarrots(n = 14) {
       for (let i = 0; i < n; i++) {
         const carrot = document.createElement('div');
@@ -307,7 +317,6 @@
         });
       }
     }
-    // keep it light so it looks lively but not laggy on phones:
     setInterval(() => launchCarrots(10), 1400);
 
     /* ===== WHEEL (Page 2) ===== */
@@ -318,7 +327,7 @@
 
     const messages = [
       "💖 You are prettier than the moon (not in a fat way)",
-      "🍿 I miss you more than popcorn misses butter",
+      " I miss you so so so sooooooooooooo much",
       "🫶 You should never leave me (just saying)"
     ];
 
@@ -339,27 +348,63 @@
 
     nextBtn.onclick = () => showPage('page3');
 
-    /* ===== LAST PAGE (Page 3) ===== */
+    /* ===== LAST PAGE (Page 3) — No button dodge (repeated) ===== */
+    document.addEventListener('DOMContentLoaded', () => {
+      // Activate dodge once Page 3 becomes visible
+      const observer = new MutationObserver(() => {
+        if (document.getElementById('page3').classList.contains('active')) {
+          primeNoBtn();
+          observer.disconnect();
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    });
+
+    const noBtn = document.getElementById('noBtn');
+
+    function randomOnScreenPosition(el) {
+      const pad = 16;
+      const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+      const vh = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+      const rect = el.getBoundingClientRect();
+      const maxX = vw - rect.width - pad;
+      const maxY = vh - rect.height - pad;
+      const x = Math.floor(Math.random() * (maxX - pad) + pad);
+      const y = Math.floor(Math.random() * (maxY - pad) + pad);
+      el.style.position = 'fixed';
+      el.style.left = x + 'px';
+      el.style.top  = y + 'px';
+      el.style.transform = 'translate(0,0)';
+    }
+
+    function moveAwayFromPointer(e) {
+      const r = noBtn.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top  + r.height / 2;
+      const dx = (e.clientX ?? 0) - cx;
+      const dy = (e.clientY ?? 0) - cy;
+      const dist = Math.hypot(dx, dy);
+      if (dist < 140) randomOnScreenPosition(noBtn);
+    }
+
+    function primeNoBtn() {
+      randomOnScreenPosition(noBtn);
+      noBtn.addEventListener('mouseenter', () => randomOnScreenPosition(noBtn));
+      noBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); randomOnScreenPosition(noBtn); });
+      noBtn.addEventListener('touchstart', (e) => { e.preventDefault(); randomOnScreenPosition(noBtn); }, { passive: false });
+      document.addEventListener('pointermove', moveAwayFromPointer);
+      noBtn.addEventListener('click', (e) => { e.preventDefault(); randomOnScreenPosition(noBtn); });
+    }
+
+    // YES button celebration
     document.getElementById('yesBtn').onclick = () => {
       launchCarrots(50);
       document.getElementById('yesBtn').disabled = true;
       const msg = document.createElement('p');
-      msg.textContent = "Yay! I can’t wait 🥰";
+      msg.textContent = "Yay! I can’t wait ";
       msg.style.marginTop = '1em';
       document.getElementById('page3').appendChild(msg);
     };
-
-    const noBtn = document.getElementById('noBtn');
-    function dodge() {
-      // random small hops so it stays on screen
-      const dx = Math.random()*220 - 110;
-      const dy = Math.random()*140 - 70;
-      noBtn.style.transform = `translate(${dx}px, ${dy}px)`;
-    }
-    // works on desktop hover and iPhone touch
-    noBtn.addEventListener('mouseenter', dodge);
-    noBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); dodge(); });
-    noBtn.addEventListener('touchstart', (e) => { e.preventDefault(); dodge(); }, { passive: false });
   </script>
 </body>
 </html>
