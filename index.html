@@ -8,16 +8,198 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
   <style>
-    /* ... (all your existing CSS stays the same) ... */
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      font-family: 'Poppins', sans-serif;
+      overflow: hidden;
+    }
+
+    /* Animated background */
+    body {
+      background: url("https://wallpaperaccess.com/full/8278296.gif") no-repeat center center fixed;
+      background-size: cover;
+    }
+
+    /* Overlay tint */
+    #overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: linear-gradient(
+        135deg,
+        rgba(255,192,203,0.4),
+        rgba(255,255,224,0.2),
+        rgba(178,34,34,0.3)
+      );
+      z-index: -1;
+    }
+
+    .page {
+      position: absolute;
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.8s ease;
+      padding: 1em;
+      text-align: center;
+    }
+    .active {
+      opacity: 1; pointer-events: all;
+    }
+    h1 {
+      font-family: 'Pacifico', cursive;
+      font-size: 2.2em;
+      margin-bottom: 0.5em;
+      color: #ad3e5b;
+      text-shadow: 1px 1px 3px rgba(255,255,255,0.6);
+    }
+    p {
+      font-size: 1.2em;
+      margin-bottom: 1em;
+      color: #333;
+      text-shadow: 1px 1px 2px rgba(255,255,255,0.6);
+    }
+    input {
+      padding: 0.6em 1em;
+      font-size: 1em;
+      border-radius: 20px;
+      border: none;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    button {
+      padding: 0.6em 1.4em;
+      font-size: 1em;
+      border-radius: 24px;
+      border: none;
+      margin: 0.5em;
+      background: #ffe4e1;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+    }
+    button:hover { transform: scale(1.05); }
+    #muteBtn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 10;
+    }
+
+    /* Wheel styles */
+    .wheel-area {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      border: 8px solid #fff;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      background: conic-gradient(
+        #ffb6c1 0deg 120deg,
+        #ffe4e1 120deg 240deg,
+        #f8c8dc 240deg 360deg
+      );
+      transition: transform 4s cubic-bezier(0.33, 1, 0.68, 1);
+      margin: 1em auto;
+    }
+    .pointer {
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 2em;
+      z-index: 2;
+    }
+    .messages {
+      font-weight: bold;
+      color: #8b1e3f;
+      margin-bottom: 1em;
+    }
+    .result {
+      margin-top: 1em;
+      font-size: 1.1em;
+      color: #8b1e3f;
+      display: none;
+    }
+    footer {
+      position: absolute;
+      bottom: 10px;
+      font-size: 0.9em;
+      color: #333;
+    }
+
+    /* Intro Page */
+    #introPage {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      color: #fff;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+      font-family: 'Pacifico', cursive;
+      text-align: center;
+      overflow: hidden;
+      animation: powerOn 2200ms ease-out forwards;
+    }
+    #introLogo {
+      font-size: 2rem;
+      opacity: 0.9;
+      letter-spacing: 1px;
+    }
+    @keyframes powerOn {
+      0%   { background:#000; filter: brightness(1); }
+      10%  { background:#111; }
+      20%  { background:#fff; }
+      22%  { background:#000; }
+      30%  { background:#111; }
+      45%  { background:#222; }
+      60%  { background:#000; }
+      80%  { background:#000; }
+      100% { background:#000; }
+    }
+    #introStatic {
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(#fff 1px, transparent 1px),
+        radial-gradient(#fff 1px, transparent 1px);
+      background-position: 0 0, 8px 8px;
+      background-size: 16px 16px;
+      opacity: 0.06;
+      animation: noiseShift 300ms steps(2) infinite;
+      pointer-events: none;
+    }
+    @keyframes noiseShift {
+      0% { transform: translate(0,0); }
+      100% { transform: translate(2px,-2px); }
+    }
+    #scanline {
+      position: absolute;
+      left: 0; right: 0;
+      height: 6px;
+      background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.7), transparent);
+      animation: scan 800ms linear infinite;
+      opacity: 0.35;
+      pointer-events: none;
+    }
+    @keyframes scan {
+      0% { transform: translateY(-10%); }
+      100% { transform: translateY(110%); }
+    }
   </style>
 </head>
 <body>
-  <!-- overlay tint -->
   <div id="overlay"></div>
-
   <button id="muteBtn">🔈 Mute</button>
 
-  <!-- ===== Page 0: TV Intro ===== -->
+  <!-- Intro Page -->
   <div id="introPage">
     <div id="introStatic"></div>
     <div id="scanline"></div>
@@ -62,14 +244,14 @@
   </div>
 
   <script>
-    // ===== Static SFX for TV Intro =====
+    // Intro static sound
     const staticSfx = new Howl({
       src: ['audio/mixkit-static-electricity-presentation-2592.mp3'],
       volume: 0.6
     });
-    try { staticSfx.play(); } catch (e) {}
+    try { staticSfx.play(); } catch(e) {}
 
-    // ===== Background Music =====
+    // Background music
     const sound = new Howl({
       src: ['audio/kiss-the-rain-274811.mp3'],
       autoplay: true,
@@ -81,7 +263,7 @@
       document.getElementById('muteBtn').textContent = sound._muted ? '🔈 Mute' : '🔇 Unmute';
     };
 
-    // ===== Mobile audio unlock =====
+    // Unlock audio on first tap/click (mobile)
     function unlockAudioOnce() {
       try { if (staticSfx && !staticSfx.playing()) staticSfx.play(); } catch(e){}
       try { if (sound && !sound.playing()) sound.play(); } catch(e){}
@@ -91,13 +273,13 @@
     window.addEventListener('touchstart', unlockAudioOnce, { once: true });
     window.addEventListener('click', unlockAudioOnce, { once: true });
 
-    // ===== Show Page Logic =====
+    // Show pages
     function showPage(id) {
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
       document.getElementById(id).classList.add('active');
     }
 
-    // ===== Intro fade out =====
+    // Intro fade
     setTimeout(() => {
       const intro = document.getElementById('introPage');
       intro.style.transition = 'opacity 500ms ease';
@@ -108,7 +290,7 @@
       }, 520);
     }, 2400);
 
-    // ===== Page 1 =====
+    // Page 1
     document.getElementById('nameInput').addEventListener('keypress', e => {
       if (e.key === 'Enter') {
         let val = e.target.value.trim().toLowerCase();
@@ -121,7 +303,7 @@
       }
     });
 
-    // ===== Confetti =====
+    // Confetti
     function launchConfetti() {
       for (let i = 0; i < 50; i++) {
         const heart = document.createElement('div');
@@ -143,7 +325,7 @@
       }
     }
 
-    // ===== Wheel Logic =====
+    // Wheel
     const spinBtn = document.getElementById('spinBtn');
     const nextBtn = document.getElementById('nextBtn');
     const wheel = document.getElementById('wheel');
@@ -172,7 +354,7 @@
 
     nextBtn.onclick = () => showPage('page3');
 
-    // ===== Page 3 =====
+    // Page 3
     document.getElementById('yesBtn').onclick = () => {
       launchConfetti();
       document.getElementById('yesBtn').disabled = true;
