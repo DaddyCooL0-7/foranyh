@@ -14,6 +14,7 @@
       width: 100%; height: 100%;
       font-family: 'Poppins', sans-serif;
       overflow: hidden;
+      -webkit-tap-highlight-color: transparent; /* nicer on iPhone */
     }
 
     /* Animated background */
@@ -46,9 +47,8 @@
       padding: 1em;
       text-align: center;
     }
-    .active {
-      opacity: 1; pointer-events: all;
-    }
+    .active { opacity: 1; pointer-events: all; }
+
     h1 {
       font-family: 'Pacifico', cursive;
       font-size: 2.2em;
@@ -69,6 +69,7 @@
       border: none;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
       text-align: center;
+      width: min(420px, 80vw); /* comfy on iPhone */
     }
     button {
       padding: 0.6em 1.4em;
@@ -80,14 +81,15 @@
       cursor: pointer;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
       transition: transform 0.3s ease;
+      touch-action: manipulation; /* snappier on iPhone */
     }
     button:hover { transform: scale(1.05); }
 
     /* Wheel styles */
     .wheel-area {
       position: relative;
-      width: 300px;
-      height: 300px;
+      width: min(300px, 80vw);
+      height: min(300px, 80vw);
       border-radius: 50%;
       border: 8px solid #fff;
       box-shadow: 0 0 10px rgba(0,0,0,0.2);
@@ -123,6 +125,9 @@
       bottom: 10px;
       font-size: 0.9em;
       color: #333;
+      padding: 0 12px;
+      text-align: center;
+      width: 100%;
     }
 
     /* Intro Page */
@@ -142,25 +147,20 @@
       overflow: hidden;
       animation: powerOn 2200ms ease-out forwards;
     }
-    #introLogo {
-      font-size: 2rem;
-      opacity: 0.9;
-      letter-spacing: 1px;
-    }
+    #introLogo { font-size: 2rem; opacity: 0.9; letter-spacing: 1px; }
     @keyframes powerOn {
-      0%   { background:#000; filter: brightness(1); }
-      10%  { background:#111; }
-      20%  { background:#fff; }
-      22%  { background:#000; }
-      30%  { background:#111; }
-      45%  { background:#222; }
-      60%  { background:#000; }
-      80%  { background:#000; }
+      0% { background:#000; filter: brightness(1); }
+      10% { background:#111; }
+      20% { background:#fff; }
+      22% { background:#000; }
+      30% { background:#111; }
+      45% { background:#222; }
+      60% { background:#000; }
+      80% { background:#000; }
       100% { background:#000; }
     }
     #introStatic {
-      position: absolute;
-      inset: 0;
+      position: absolute; inset: 0;
       background-image:
         radial-gradient(#fff 1px, transparent 1px),
         radial-gradient(#fff 1px, transparent 1px);
@@ -170,19 +170,14 @@
       animation: noiseShift 300ms steps(2) infinite;
       pointer-events: none;
     }
-    @keyframes noiseShift {
-      0% { transform: translate(0,0); }
-      100% { transform: translate(2px,-2px); }
-    }
+    @keyframes noiseShift { 0% { transform: translate(0,0); } 100% { transform: translate(2px,-2px); } }
     #scanline {
-      position: absolute;
-      left: 0; right: 0;
-      height: 6px;
+      position: absolute; left: 0; right: 0; height: 6px;
       background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.7), transparent);
       animation: scan 800ms linear infinite;
-      opacity: 0.35;
-      pointer-events: none;
+      opacity: 0.35; pointer-events: none;
     }
+    @keyframes scan { 0% { transform: translateY(-10%); } 100% { transform: translateY(110%); } }
   </style>
 </head>
 <body>
@@ -233,14 +228,11 @@
   </div>
 
   <script>
-    // Intro static sound
+    /* ===== ALWAYS-ON AUDIO (with iPhone unlock) ===== */
     const staticSfx = new Howl({
       src: ['audio/mixkit-static-electricity-presentation-2592.mp3'],
       volume: 0.6
     });
-    try { staticSfx.play(); } catch(e) {}
-
-    // Background music (always on)
     const sound = new Howl({
       src: ['audio/kiss-the-rain-274811.mp3'],
       autoplay: true,
@@ -248,17 +240,21 @@
       volume: 0.5
     });
 
-    // Unlock audio on first tap/click (iPhone/Android policy)
+    // Attempt to start; iOS may block until first gesture:
+    try { staticSfx.play(); } catch(e) {}
+    // Safari/iOS unlock on first interaction:
     function unlockAudioOnce() {
       try { if (!staticSfx.playing()) staticSfx.play(); } catch(e){}
       try { if (!sound.playing()) sound.play(); } catch(e){}
       window.removeEventListener('touchstart', unlockAudioOnce);
+      window.removeEventListener('pointerdown', unlockAudioOnce);
       window.removeEventListener('click', unlockAudioOnce);
     }
     window.addEventListener('touchstart', unlockAudioOnce, { once: true });
+    window.addEventListener('pointerdown', unlockAudioOnce, { once: true });
     window.addEventListener('click', unlockAudioOnce, { once: true });
 
-    // Show pages
+    /* ===== PAGE SWITCHING ===== */
     function showPage(id) {
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
       document.getElementById(id).classList.add('active');
@@ -275,12 +271,12 @@
       }, 520);
     }, 2400);
 
-    // Page 1
+    /* ===== INPUT GATE (Page 1) ===== */
     document.getElementById('nameInput').addEventListener('keypress', e => {
       if (e.key === 'Enter') {
         let val = e.target.value.trim().toLowerCase();
         if (val === 'babe' || val === 'muffin') {
-          launchConfetti(); // now carrots
+          launchCarrots(40); // still celebrate, but carrots now
           setTimeout(() => showPage('page2'), 1000);
         } else {
           alert('Hehe nope, try again 😜');
@@ -288,56 +284,33 @@
       }
     });
 
-    // === Carrot particles ===
-    function spawnCarrot() {
-      const carrot = document.createElement('div');
-      carrot.textContent = '🥕';
-      carrot.style.position = 'fixed';
-      carrot.style.left = Math.random() * 100 + '%';
-      carrot.style.top = (100 + Math.random() * 10) + '%'; // start slightly below
-      carrot.style.fontSize = (Math.random() * 20 + 14) + 'px';
-      carrot.style.pointerEvents = 'none';
-      document.body.appendChild(carrot);
-
-      anime({
-        targets: carrot,
-        translateY: ['0vh', '-110vh'],
-        translateX: anime.random(-20, 20),
-        rotate: () => anime.random(-45, 45),
-        opacity: [{ value: 1, duration: 100 }, { value: 0, duration: 800, delay: 1200 }],
-        duration: anime.random(1500, 2600),
-        easing: 'easeOutCubic',
-        complete: () => carrot.remove()
-      });
-    }
-
-    // Continuous carrots "all the time"
-    let carrotInterval = setInterval(spawnCarrot, 400);
-
-    // Confetti -> now carrots burst (kept same function name to avoid changing other calls)
-    function launchConfetti() {
-      for (let i = 0; i < 50; i++) {
+    /* ===== CARROT POPS (replaces hearts; runs continuously) ===== */
+    function launchCarrots(n = 14) {
+      for (let i = 0; i < n; i++) {
         const carrot = document.createElement('div');
         carrot.textContent = '🥕';
         carrot.style.position = 'fixed';
         carrot.style.left = Math.random() * 100 + '%';
-        carrot.style.top = Math.random() * 100 + '%';
-        carrot.style.fontSize = (Math.random() * 20 + 10) + 'px';
+        carrot.style.top = '100%';
+        carrot.style.fontSize = (Math.random() * 18 + 14) + 'px';
         carrot.style.pointerEvents = 'none';
         document.body.appendChild(carrot);
         anime({
           targets: carrot,
-          translateY: '-100vh',
-          rotate: () => anime.random(-360, 360),
-          opacity: 0,
+          translateY: `-${Math.random() * 110 + 70}vh`,
+          translateX: `${Math.random() * 40 - 20}vw`,
+          rotate: () => anime.random(-30, 30),
+          opacity: [{ value: 1, duration: 200 }, { value: 0, duration: 600, delay: 700 }],
           duration: anime.random(1200, 2000),
-          easing: 'easeOutExpo',
+          easing: 'easeOutCubic',
           complete: () => carrot.remove()
         });
       }
     }
+    // keep it light so it looks lively but not laggy on phones:
+    setInterval(() => launchCarrots(10), 1400);
 
-    // Wheel
+    /* ===== WHEEL (Page 2) ===== */
     const spinBtn = document.getElementById('spinBtn');
     const nextBtn = document.getElementById('nextBtn');
     const wheel = document.getElementById('wheel');
@@ -366,9 +339,9 @@
 
     nextBtn.onclick = () => showPage('page3');
 
-    // Page 3
+    /* ===== LAST PAGE (Page 3) ===== */
     document.getElementById('yesBtn').onclick = () => {
-      launchConfetti(); // carrots burst
+      launchCarrots(50);
       document.getElementById('yesBtn').disabled = true;
       const msg = document.createElement('p');
       msg.textContent = "Yay! I can’t wait 🥰";
@@ -377,9 +350,16 @@
     };
 
     const noBtn = document.getElementById('noBtn');
-    noBtn.addEventListener('mouseenter', () => {
-      noBtn.style.transform = `translate(${Math.random()*200-100}px, ${Math.random()*100-50}px)`;
-    });
+    function dodge() {
+      // random small hops so it stays on screen
+      const dx = Math.random()*220 - 110;
+      const dy = Math.random()*140 - 70;
+      noBtn.style.transform = `translate(${dx}px, ${dy}px)`;
+    }
+    // works on desktop hover and iPhone touch
+    noBtn.addEventListener('mouseenter', dodge);
+    noBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); dodge(); });
+    noBtn.addEventListener('touchstart', (e) => { e.preventDefault(); dodge(); }, { passive: false });
   </script>
 </body>
 </html>
